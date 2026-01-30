@@ -33,6 +33,20 @@ class BookingRepository extends ServiceEntityRepository
             ->getSingleScalarResult();
     }
 
+    public function findByClientWithActivity(int $clientId): array
+    {
+        return $this->createQueryBuilder('b')
+            ->join('b.activity', 'a')
+            ->addSelect('a')
+            ->where('b.client = :clientId')
+            ->setParameter('clientId', $clientId)
+            ->getQuery()
+            ->getResult();
+    }
+
+
+
+
 
     //    /**
     //     * @return Booking[] Returns an array of Booking objects
