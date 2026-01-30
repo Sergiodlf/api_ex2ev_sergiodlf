@@ -6,6 +6,8 @@ use App\Repository\BookingRepository;
 use Doctrine\ORM\Mapping as ORM;
 
 #[ORM\Entity(repositoryClass: BookingRepository::class)]
+#[ORM\Table(name: 'booking')]
+#[ORM\UniqueConstraint(name: 'uniq_booking_client_activity', columns: ['client_id', 'activity_id'])]
 class Booking
 {
     #[ORM\Id]

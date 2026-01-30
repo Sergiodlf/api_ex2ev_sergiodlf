@@ -120,15 +120,11 @@ class Activity
 
     public function removeSong(Song $song): static
     {
-        if ($this->songs->removeElement($song)) {
-            // set the owning side to null (unless already changed)
-            if ($song->getActivity() === $this) {
-                $song->setActivity(null);
-            }
-        }
+        $this->songs->removeElement($song);
 
         return $this;
     }
+
 
     /**
      * @return Collection<int, Booking>

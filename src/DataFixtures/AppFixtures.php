@@ -36,13 +36,13 @@ class AppFixtures extends Fixture
          */
         $activity1 = new Activity();
         $activity1->setType(ActivityType::BODY_PUMP);
-        $activity1->setMaxParticipants(2);
+        $activity1->setMaxParticipants(10);
         $activity1->setDateStart(new \DateTimeImmutable('+1 day 10:00'));
         $activity1->setDateEnd(new \DateTimeImmutable('+1 day 11:00'));
 
         $activity2 = new Activity();
         $activity2->setType(ActivityType::SPINNING);
-        $activity2->setMaxParticipants(3);
+        $activity2->setMaxParticipants(10);
         $activity2->setDateStart(new \DateTimeImmutable('+2 days 18:00'));
         $activity2->setDateEnd(new \DateTimeImmutable('+2 days 19:00'));
 

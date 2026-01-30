@@ -51,18 +51,6 @@ class BookingController extends AbstractController
             return $this->json(['error' => 'Activity not found'], 404);
         }
 
-        // 4️ Comprobar plazas
-        $currentBookings = $bookingRepository->count([
-            'activity' => $activity
-        ]);
-
-        if ($currentBookings >= $activity->getMaxParticipants()) {
-            return $this->json(
-                ['error' => 'No free slots'],
-                Response::HTTP_CONFLICT
-            );
-        }
-
         // 5️ Regla STANDARD (máx 2 por semana)
         if ($client->getType() === ClientType::STANDARD) {
             $date = $activity->getDateStart();
@@ -84,6 +72,31 @@ class BookingController extends AbstractController
             }
         }
 
+        // 3.5 Evitar duplicados: mismo cliente, misma actividad
+        $existing = $bookingRepository->findOneBy([
+            'client' => $client,
+            'activity' => $activity,
+        ]);
+
+        if ($existing) {
+            return $this->json(
+                ['error' => 'Client already booked this activity'],
+                Response::HTTP_CONFLICT
+            );
+        }
+
+        // 4️ Comprobar plazas
+        $currentBookings = $bookingRepository->count([
+            'activity' => $activity
+        ]);
+
+        if ($currentBookings >= $activity->getMaxParticipants()) {
+            return $this->json(
+                ['error' => 'No free slots'],
+                Response::HTTP_CONFLICT
+            );
+        }
+
         // 6️ Crear booking
         $booking = new Booking();
         $booking->setClient($client);
@@ -92,17 +105,37 @@ class BookingController extends AbstractController
         $em->persist($booking);
         $em->flush();
 
-        // 7️ Respuesta (OpenAPI)
-        return $this->json([
+        // 7️ Respuesta (OpenAPI) - activity completa
+        // clients_signed debe ser el número actual de reservas de ESA actividad
+        $clientsSigned = $bookingRepository->count([
+            'activity' => $activity
+        ]);
+
+        $playList = [];
+        foreach ($activity->getSongs() as $song) {
+            $playList[] = [
+                'id' => $song->getId(),
+                'name' => $song->getName(),
+                'duration_seconds' => $song->getDurationSeconds(),
+            ];
+        }
+
+        // Construimos el array a mano para controlar el ORDEN de claves
+        $response = [
             'id' => $booking->getId(),
-            'client_id' => $client->getId(),
             'activity' => [
                 'id' => $activity->getId(),
-                'type' => $activity->getType()->value,
                 'max_participants' => $activity->getMaxParticipants(),
+                'clients_signed' => $clientsSigned,
+                'type' => $activity->getType()->value,
+                'play_list' => $playList,
                 'date_start' => $activity->getDateStart()->format(DATE_ATOM),
                 'date_end' => $activity->getDateEnd()->format(DATE_ATOM),
             ],
-        ], Response::HTTP_CREATED);
+            'client_id' => $client->getId(),
+        ];
+
+        // OpenAPI/YAML de tu proyecto define 200 para OK (si quieres ser ultra estricto con el YAML)
+        return $this->json($response, Response::HTTP_OK);
     }
 }
