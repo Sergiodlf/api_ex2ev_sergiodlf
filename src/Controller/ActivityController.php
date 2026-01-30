@@ -46,7 +46,10 @@ class ActivityController extends AbstractController
 
         $listDto->meta = $meta;
 
-        foreach ($results as [$activity, $signed]) {
+        foreach ($results as $row) {
+            $activity = $row[0];
+            $signed = (int) $row['signed'];
+            
             $dto = new ActivityDto();
             $dto->id = $activity->getId();
             $dto->type = $activity->getType()->value;
