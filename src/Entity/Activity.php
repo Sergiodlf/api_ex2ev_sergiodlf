@@ -6,6 +6,8 @@ use App\Repository\ActivityRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
+use App\Enum\ActivityType;
+
 
 #[ORM\Entity(repositoryClass: ActivityRepository::class)]
 class Activity
@@ -15,8 +17,8 @@ class Activity
     #[ORM\Column]
     private ?int $id = null;
 
-    #[ORM\Column(length: 20)]
-    private ?string $type = null;
+    #[ORM\Column(enumType: ActivityType::class)]
+    private ActivityType $type;
 
     #[ORM\Column]
     private ?int $maxParticipants = null;
@@ -50,12 +52,12 @@ class Activity
         return $this->id;
     }
 
-    public function getType(): ?string
+    public function getType(): ActivityType
     {
         return $this->type;
     }
 
-    public function setType(string $type): static
+    public function setType(ActivityType $type): static
     {
         $this->type = $type;
 

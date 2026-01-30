@@ -6,6 +6,8 @@ use App\Repository\ClientRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
+use App\Enum\ClientType;
+
 
 #[ORM\Entity(repositoryClass: ClientRepository::class)]
 class Client
@@ -21,8 +23,8 @@ class Client
     #[ORM\Column(length: 255)]
     private ?string $email = null;
 
-    #[ORM\Column(length: 20)]
-    private ?string $type = null;
+    #[ORM\Column(enumType: ClientType::class)]
+    private ClientType $type;
 
     /**
      * @var Collection<int, Booking>
@@ -64,17 +66,17 @@ class Client
         return $this;
     }
 
-    public function getType(): ?string
+    public function getType(): ClientType
     {
         return $this->type;
     }
 
-    public function setType(string $type): static
+    public function setType(ClientType $type): static
     {
         $this->type = $type;
-
         return $this;
     }
+
 
     /**
      * @return Collection<int, Booking>
@@ -105,5 +107,4 @@ class Client
 
         return $this;
     }
-
 }
