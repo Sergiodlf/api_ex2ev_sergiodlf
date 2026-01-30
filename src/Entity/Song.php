@@ -14,53 +14,50 @@ class Song
     private ?int $id = null;
 
     #[ORM\Column(length: 255)]
-    private ?string $title = null;
+    private string $name;
 
-    #[ORM\Column(length: 255)]
-    private ?string $artist = null;
+    #[ORM\Column]
+    private int $durationSeconds;
 
     #[ORM\ManyToOne(inversedBy: 'songs')]
     #[ORM\JoinColumn(nullable: false)]
-    private ?Activity $activity = null;
+    private Activity $activity;
 
     public function getId(): ?int
     {
         return $this->id;
     }
 
-    public function getTitle(): ?string
+    public function getName(): string
     {
-        return $this->title;
+        return $this->name;
     }
 
-    public function setTitle(string $title): static
+    public function setName(string $name): static
     {
-        $this->title = $title;
-
+        $this->name = $name;
         return $this;
     }
 
-    public function getArtist(): ?string
+    public function getDurationSeconds(): int
     {
-        return $this->artist;
+        return $this->durationSeconds;
     }
 
-    public function setArtist(string $artist): static
+    public function setDurationSeconds(int $durationSeconds): static
     {
-        $this->artist = $artist;
-
+        $this->durationSeconds = $durationSeconds;
         return $this;
     }
 
-    public function getActivity(): ?Activity
+    public function getActivity(): Activity
     {
         return $this->activity;
     }
 
-    public function setActivity(?Activity $activity): static
+    public function setActivity(Activity $activity): static
     {
         $this->activity = $activity;
-
         return $this;
     }
 }

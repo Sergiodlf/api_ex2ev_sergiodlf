@@ -53,18 +53,18 @@ class AppFixtures extends Fixture
          * CANCIONES (playlist 1–M)
          */
         $song1 = new Song();
-        $song1->setTitle('Eye of the Tiger');
-        $song1->setArtist('Survivor');
+        $song1->setName('Eye of the Tiger');
+        $song1->setDurationSeconds(245);
         $song1->setActivity($activity1);
 
         $song2 = new Song();
-        $song2->setTitle('Lose Yourself');
-        $song2->setArtist('Eminem');
+        $song2->setName('Lose Yourself');
+        $song2->setDurationSeconds(326);
         $song2->setActivity($activity1);
 
         $song3 = new Song();
-        $song3->setTitle('Titanium');
-        $song3->setArtist('David Guetta');
+        $song3->setName('Titanium');
+        $song3->setDurationSeconds(245);
         $song3->setActivity($activity2);
 
         $manager->persist($song1);

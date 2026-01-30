@@ -4,7 +4,6 @@ namespace App\Controller;
 
 use App\Dto\ActivityDto;
 use App\Dto\ActivityListDto;
-use App\Dto\PaginationMetaDto;
 use App\Repository\ActivityRepository;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -37,32 +36,31 @@ class ActivityController extends AbstractController
         );
 
         $listDto = new ActivityListDto();
+        $listDto->meta = [[
+            'page' => $page,
+            'limit' => $pageSize,
+            'total-items' => count($results),
+        ]];
 
-        $meta = new PaginationMetaDto();
-        $meta->page = $page;
-        $meta->page_size = $pageSize;
-        $meta->total_items = count($results);
-        $meta->total_pages = 1;
-
-        $listDto->meta = $meta;
 
         foreach ($results as $row) {
             $activity = $row[0];
             $signed = (int) $row['signed'];
-            
+
             $dto = new ActivityDto();
             $dto->id = $activity->getId();
-            $dto->type = $activity->getType()->value;
             $dto->max_participants = $activity->getMaxParticipants();
             $dto->clients_signed = (int) $signed;
+            $dto->type = $activity->getType()->value;
             $dto->date_start = $activity->getDateStart()->format(DATE_ATOM);
             $dto->date_end = $activity->getDateEnd()->format(DATE_ATOM);
 
             // play_list (1–M Song)
             foreach ($activity->getSongs() as $song) {
                 $dto->play_list[] = [
-                    'title' => $song->getTitle(),
-                    'artist' => $song->getArtist(),
+                    'id' => $song->getId(),
+                    'name' => $song->getName(),
+                    'duration_seconds' => $song->getDurationSeconds(),
                 ];
             }
 
