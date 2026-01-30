@@ -40,9 +40,9 @@ class ClientController extends AbstractController
 
         $dto = new ClientDto();
         $dto->id = $client->getId();
+        $dto->type = $client->getType()->value;
         $dto->name = $client->getName();
         $dto->email = $client->getEmail();
-        $dto->type = $client->getType()->value;
 
         /*
          * BOOKINGS
@@ -51,14 +51,31 @@ class ClientController extends AbstractController
             foreach ($client->getBookings() as $booking) {
                 $activity = $booking->getActivity();
 
+                // clients_signed
+                $clientsSigned = count($activity->getBookings());
+
+                // play_list
+                $playList = [];
+                foreach ($activity->getSongs() as $song) {
+                    $playList[] = [
+                        'id' => $song->getId(),
+                        'name' => $song->getName(),
+                        'duration_seconds' => $song->getDurationSeconds(),
+                    ];
+                }
+
                 $dto->activities_booked[] = [
                     'id' => $booking->getId(),
                     'activity' => [
                         'id' => $activity->getId(),
+                        'max_participants' => $activity->getMaxParticipants(),
+                        'clients_signed' => $clientsSigned,
                         'type' => $activity->getType()->value,
+                        'play_list' => $playList,
                         'date_start' => $activity->getDateStart()->format(DATE_ATOM),
                         'date_end' => $activity->getDateEnd()->format(DATE_ATOM),
                     ],
+                    'client_id' => $client->getId(),
                 ];
             }
         }
@@ -83,27 +100,32 @@ class ClientController extends AbstractController
                 ) / 60;
 
                 if (!isset($years[$year])) {
-                    $yearDto = new StatisticsByYearDto();
-                    $yearDto->year = $year;
-                    $years[$year] = $yearDto;
+                    $years[$year] = [
+                        'year' => $year,
+                        'statistics_by_type' => []
+                    ];
                 }
 
-                if (!isset($years[$year]->activities[$type])) {
-                    $typeDto = new StatisticsByTypeDto();
-                    $typeDto->activity_type = $type;
-                    $typeDto->activities_count = 0;
-                    $typeDto->minutes = 0;
-
-                    $years[$year]->activities[$type] = $typeDto;
+                if (!isset($years[$year]['statistics_by_type'][$type])) {
+                    $years[$year]['statistics_by_type'][$type] = [
+                        'type' => $type,
+                        'statistics' => [[
+                            'num_activities' => '0',
+                            'num_minutes' => '0',
+                        ]]
+                    ];
                 }
 
-                $years[$year]->activities[$type]->activities_count++;
-                $years[$year]->activities[$type]->minutes += (int) $minutes;
+                $years[$year]['statistics_by_type'][$type]['statistics'][0]['num_activities'] =
+                    (string) ((int) $years[$year]['statistics_by_type'][$type]['statistics'][0]['num_activities'] + 1);
+
+                $years[$year]['statistics_by_type'][$type]['statistics'][0]['num_minutes'] =
+                    (string) ((int) $years[$year]['statistics_by_type'][$type]['statistics'][0]['num_minutes'] + (int) $minutes);
             }
 
-            // Reindexar arrays para JSON limpio
-            foreach ($years as $yearDto) {
-                $yearDto->activities = array_values($yearDto->activities);
+            // Reindexar
+            foreach ($years as &$yearData) {
+                $yearData['statistics_by_type'] = array_values($yearData['statistics_by_type']);
             }
 
             $dto->activity_statistics = array_values($years);

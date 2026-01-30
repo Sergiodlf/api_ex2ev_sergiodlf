@@ -3,7 +3,6 @@
 namespace App\DataFixtures;
 
 use App\Entity\Activity;
-use App\Entity\Booking;
 use App\Entity\Client;
 use App\Entity\Song;
 use App\Enum\ActivityType;
@@ -16,69 +15,99 @@ class AppFixtures extends Fixture
     public function load(ObjectManager $manager): void
     {
         /*
-         * CLIENTES
+         * =========================
+         * CLIENTES (10)
+         * =========================
          */
-        $client1 = new Client();
-        $client1->setName('Ana Standard');
-        $client1->setEmail('ana.standard@example.com');
-        $client1->setType(ClientType::STANDARD);
+        $clients = [];
 
-        $client2 = new Client();
-        $client2->setName('Luis Premium');
-        $client2->setEmail('luis.premium@example.com');
-        $client2->setType(ClientType::PREMIUM);
+        for ($i = 1; $i <= 10; $i++) {
+            $client = new Client();
+            $client->setName("Cliente $i");
+            $client->setEmail("cliente$i@example.com");
 
-        $manager->persist($client1);
-        $manager->persist($client2);
+            // Alternamos STANDARD / PREMIUM
+            $client->setType(
+                $i % 2 === 0 ? ClientType::PREMIUM : ClientType::STANDARD
+            );
+
+            $manager->persist($client);
+            $clients[] = $client;
+        }
 
         /*
-         * ACTIVIDADES
+         * =========================
+         * ACTIVIDADES (10)
+         * max_participants = 5
+         * =========================
          */
-        $activity1 = new Activity();
-        $activity1->setType(ActivityType::BODY_PUMP);
-        $activity1->setMaxParticipants(10);
-        $activity1->setDateStart(new \DateTimeImmutable('+1 day 10:00'));
-        $activity1->setDateEnd(new \DateTimeImmutable('+1 day 11:00'));
+        $activities = [];
+        $types = [
+            ActivityType::BODY_PUMP,
+            ActivityType::SPINNING,
+            ActivityType::CORE,
+        ];
 
-        $activity2 = new Activity();
-        $activity2->setType(ActivityType::SPINNING);
-        $activity2->setMaxParticipants(10);
-        $activity2->setDateStart(new \DateTimeImmutable('+2 days 18:00'));
-        $activity2->setDateEnd(new \DateTimeImmutable('+2 days 19:00'));
+        for ($i = 1; $i <= 10; $i++) {
+            $activity = new Activity();
 
-        $manager->persist($activity1);
-        $manager->persist($activity2);
+            $activity->setType($types[$i % 3]);
+            $activity->setMaxParticipants(5);
+
+            // Fechas escalonadas
+            $start = new \DateTimeImmutable("+$i days 10:00");
+            $end = $start->modify('+1 hour');
+
+            $activity->setDateStart($start);
+            $activity->setDateEnd($end);
+
+            $manager->persist($activity);
+            $activities[] = $activity;
+        }
 
         /*
-         * CANCIONES (playlist 1–M)
+         * =========================
+         * SONGS (playlist 1–M)
+         * =========================
+         * Dejamos una playlist simple:
+         * - 2 canciones para BodyPump
+         * - 1 canción para Spinning
+         * - 1 canción para Core
          */
-        $song1 = new Song();
-        $song1->setName('Eye of the Tiger');
-        $song1->setDurationSeconds(245);
-        $song1->setActivity($activity1);
+        foreach ($activities as $activity) {
+            if ($activity->getType() === ActivityType::BODY_PUMP) {
+                $song1 = new Song();
+                $song1->setName('Eye of the Tiger');
+                $song1->setDurationSeconds(245);
+                $song1->setActivity($activity);
 
-        $song2 = new Song();
-        $song2->setName('Lose Yourself');
-        $song2->setDurationSeconds(326);
-        $song2->setActivity($activity1);
+                $song2 = new Song();
+                $song2->setName('Lose Yourself');
+                $song2->setDurationSeconds(326);
+                $song2->setActivity($activity);
 
-        $song3 = new Song();
-        $song3->setName('Titanium');
-        $song3->setDurationSeconds(245);
-        $song3->setActivity($activity2);
+                $manager->persist($song1);
+                $manager->persist($song2);
+            }
 
-        $manager->persist($song1);
-        $manager->persist($song2);
-        $manager->persist($song3);
+            if ($activity->getType() === ActivityType::SPINNING) {
+                $song = new Song();
+                $song->setName('Titanium');
+                $song->setDurationSeconds(245);
+                $song->setActivity($activity);
 
-        /*
-         * RESERVA INICIAL (para probar onlyfree y clients_signed)
-         */
-        $booking = new Booking();
-        $booking->setClient($client1);
-        $booking->setActivity($activity1);
+                $manager->persist($song);
+            }
 
-        $manager->persist($booking);
+            if ($activity->getType() === ActivityType::CORE) {
+                $song = new Song();
+                $song->setName('Stronger');
+                $song->setDurationSeconds(210);
+                $song->setActivity($activity);
+
+                $manager->persist($song);
+            }
+        }
 
         $manager->flush();
     }
